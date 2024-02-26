@@ -1,0 +1,4 @@
+date,from,to,title,amount,ISO
+2024-02-26,incomes::mainAccount,expenses::food,"Alesova, 221",150,CZK
+2024-02-26,incomes::mainAccount,expenses::car,Gas,500,CZK
+haha,whatevs,,,,
