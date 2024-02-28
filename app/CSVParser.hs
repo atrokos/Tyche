@@ -1,5 +1,4 @@
 module CSVParser where
-import Control.Monad (mapM)
 import Data.Foldable (Foldable(foldl'))
 
 type CSVCell = String
@@ -41,8 +40,8 @@ parseCSV input = traverse parseLine (lines input)
 validateCSV :: [CSVRow] -> ParsedCSV -- Checks whether all rows have the same amount of columns
 validateCSV [] = Right []
 validateCSV [row] = Right [row]
-validateCSV rows = traverse (\r -> if l == length r then Right r else Left $ "Error: This row does not have the same amount of columns as the header:\n" <> (joinString "," r)) rows
-    where l = length $ head rows
+validateCSV all@(header:rows) = traverse (\r -> if l == length r then Right r else Left $ "Error: This row does not have the same amount of columns as the header:\n" <> (joinString "," r)) all
+    where l = length $ header
 
 joinString :: String -> [String] -> String
 joinString _ [] = ""

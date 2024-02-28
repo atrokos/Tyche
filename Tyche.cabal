@@ -28,11 +28,14 @@ executable Tyche
         Errors
         CSVParser
         Date
+        Arguments
+        Money
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:
-        base ^>= 4.18.0.0,
-        split >= 0.2.5
+        base >= 4.18.0.0,
+        split >= 0.2.5,
+        text  >= 2.1.1
     hs-source-dirs:   app
     default-language: Haskell2010

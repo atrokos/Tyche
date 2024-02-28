@@ -26,3 +26,4 @@ validateGroupName name = foldM checkPresence name disallowedNameChars
 
 checkPresence :: String -> Char -> Either String String
 checkPresence string char = if char `elem` string then Left $ char:" is not allowed as a group name!" else Right string
+
