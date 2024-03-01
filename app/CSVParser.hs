@@ -1,5 +1,5 @@
 module CSVParser where
-import Data.Foldable (Foldable(foldl'))
+import Utils ( joinString ) 
 
 type CSVCell = String
 type CSVRow = [CSVCell]
@@ -42,8 +42,3 @@ validateCSV [] = Right []
 validateCSV [row] = Right [row]
 validateCSV all@(header:rows) = traverse (\r -> if l == length r then Right r else Left $ "Error: This row does not have the same amount of columns as the header:\n" <> (joinString "," r)) all
     where l = length $ header
-
-joinString :: String -> [String] -> String
-joinString _ [] = ""
-joinString _ [string] = string
-joinString sep strings = foldl' (\ acc str -> acc ++ str ++ sep) "" (init strings) ++ last strings

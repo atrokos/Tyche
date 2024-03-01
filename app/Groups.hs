@@ -1,21 +1,25 @@
+{-# LANGUAGE InstanceSigs #-}
 module Groups where
 import Data.List.Split (splitOn)
-import Errors
 import Control.Monad (foldM)
 
 data Group = Groups {name :: String, subgroup :: Group} | Group {name :: String}
-    deriving Show
 
-tamto :: String -> Either String Group
-tamto = parseGroup . splitOn "::"
+instance Show Group where
+    show :: Group -> String
+    show (Group name) = name
+    show (Groups name subgroup) = name ++ "::" ++ show subgroup
 
-parseGroup :: [String] -> Either String Group
-parseGroup [] = Left "Empty group given!"
-parseGroup [group] = validateGroupName group >>= \name -> return $ Group name
-parseGroup (group:subgroups) =
+parseGroup :: String -> Either String Group
+parseGroup = stringToGroup . splitOn "::"
+
+stringToGroup :: [String] -> Either String Group
+stringToGroup [] = Left "Empty group given!"
+stringToGroup [group] = validateGroupName group >>= \name -> return $ Group name
+stringToGroup (group:subgroups) =
     do
         name <- validateGroupName group
-        subgroup <- parseGroup subgroups
+        subgroup <- stringToGroup subgroups
         return $ Groups name subgroup
 
 disallowedNameChars :: [Char]

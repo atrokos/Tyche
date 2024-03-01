@@ -24,19 +24,20 @@ executable Tyche
 
     -- Modules included in this executable, other than Main.
     other-modules:
-        Groups
-        Errors
-        CSVParser
-        Date
         Arguments
-        Money
-        Requests
+        CSVParser
+        Groups
+        Transaction
+        Filters
+        Utils
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
     build-depends:
-        base >= 4.18.0.0,
+        base  >= 4.18.0.0,
         split >= 0.2.5,
-        text  >= 2.1.1
+        text  >= 2.1.1,
+        time  >= 1.12.2,
+        containers >= 0.6.7
     hs-source-dirs:   app
     default-language: Haskell2010
