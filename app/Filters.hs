@@ -7,8 +7,8 @@ import Groups
 import Utils
 import Data.List.Split (wordsBy)
 import qualified Data.Char as Char
+import Data.List.Split.Internals
 
-type FilterArgs = (String, String, String)
 newtype Filter a = Filter (a -> Bool)
 
 instance Contravariant Filter where
@@ -20,15 +20,20 @@ all' [] _ = True
 all' ((Filter f):fs) x = if f x then all' fs x else False
 
 createCompare :: Ord a => String -> a -> Either String (Filter a)
+createCompare "==" val = Right $ Filter (== val)
 createCompare ">" val = Right $ Filter (> val)
 createCompare "<" val = Right $ Filter (< val)
 createCompare ">=" val = Right $ Filter (>= val)
 createCompare "<=" val = Right $ Filter (<= val)
-createCompare "==" val = Right $ Filter (== val)
 createCompare c _ = Left $ "Unknown comparator: " ++ c
 
-createFilter :: FilterArgs -> Either String (Filter Transaction)
-createFilter (typ, comp, val) = case typ of
+createFilter :: [String] -> Either String (Filter Transaction)
+createFilter [typ, val] = parseFilter typ "==" val
+createFilter [typ, comp, val] = parseFilter typ comp val
+createFilter arg = Left $ "Unknown argument: " ++ joinString " " arg
+
+parseFilter :: String -> String -> String -> Either String (Filter Transaction)
+parseFilter typ comp val = case typ of
   "amount" -> do
                 parsedValue <- stringToFloat val
                 filter      <- createCompare comp parsedValue
@@ -40,13 +45,19 @@ createFilter (typ, comp, val) = case typ of
   "title"  -> createCompare comp val >>= \filter -> return $ contramap _title filter
   "from"   -> return $ contramap _from (Filter (`contains` val))
   "to"     -> return $ contramap _to (Filter (`contains` val))
-  _ -> Left "Unsupported filter field"
+  _        -> Left "Unsupported filter field"
 
-parseFilters :: [FilterArgs] -> Either String [Filter Transaction]
+parseFilters :: [[String]] -> Either String [Filter Transaction]
 parseFilters list = traverse createFilter list
 
 filterTransactions :: [Transaction] -> [Filter Transaction] -> [Transaction]
 filterTransactions trns filters = filter (all' filters) trns
 
-parseFilterArgs :: String -> [FilterArgs]
-parseFilterArgs string = wordsBy (Char.isSpace) string 
+safeTail :: [a] -> [a]
+safeTail [] = []
+safeTail (x:xs) = xs
+
+parseFilterArgs :: String -> Either String [Filter Transaction]
+parseFilterArgs string = parseFilters splitArguments 
+  where
+    splitArguments = safeTail $ fmap words $ splitOn "--" string
