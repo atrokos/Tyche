@@ -1,2 +1,2 @@
 # Tyche
-A simplistic ledger in Haskell.
+A simple ledger in Haskell.
