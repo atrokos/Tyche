@@ -35,7 +35,7 @@ parseLine xs = parseLine (rest consumedWB) >>= (\consumed -> return $ [result co
   where consumedWB = consumeCell xs
 
 parseCSV :: String -> ParsedCSV
-parseCSV input = traverse parseLine (lines input) >>= \csv -> return $ tail csv
+parseCSV input = traverse parseLine (lines input) >>= \(header:csv) -> return $ csv
 
 validateCSV :: [CSVRow] -> ParsedCSV -- Checks whether all rows have the same amount of columns
 validateCSV [] = Right []

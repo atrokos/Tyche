@@ -7,7 +7,7 @@ import Groups
 import Utils
 import Data.List.Split (wordsBy)
 import qualified Data.Char as Char
-import Data.List.Split.Internals
+import Data.List.Split.Internals ( splitOn )
 
 newtype Filter a = Filter (a -> Bool)
 
@@ -45,7 +45,7 @@ parseFilter typ comp val = case typ of
   "title"  -> createCompare comp val >>= \filter -> return $ contramap _title filter
   "from"   -> return $ contramap _from (Filter (`contains` val))
   "to"     -> return $ contramap _to (Filter (`contains` val))
-  _        -> Left "Unsupported filter field"
+  wrong    -> Left $ "Unknown filter property: " ++ wrong
 
 parseFilters :: [[String]] -> Either String [Filter Transaction]
 parseFilters list = traverse createFilter list
@@ -60,4 +60,7 @@ safeTail (x:xs) = xs
 parseFilterArgs :: String -> Either String [Filter Transaction]
 parseFilterArgs string = parseFilters splitArguments 
   where
-    splitArguments = safeTail $ fmap words $ splitOn "--" string
+    splitArguments = safeTail $ words <$> splitOn "--" string
+
+-- TODO if last element in ^^ ends on ", go back until an element starts with ".
+-- If no such element is found, fail

@@ -3,11 +3,18 @@ import Groups (Group, parseGroup)
 import Data.Time.Calendar ( Day )
 import CSVParser (CSVRow, ParsedCSV)
 import Utils ( joinString, maybeToEither, stringToFloat, parseDate )
+import Data.List
 
 data Transaction = Transaction {_date::Day, _from::Group, _to::Group, _title :: String, _money::Money} | Empty
-  deriving Show
 data Money = Money {_amount::Float, _currency::String}
-  deriving Show
+
+instance Show Money where
+  show (Money amount curr) = show amount ++ " " ++ curr
+
+instance Show Transaction where
+  show t = show (_date t) ++ "  " ++ (_title t) ++ "\n" ++
+            "  " ++ (show $ _from t) ++ " -> " ++ (show $ _to t) ++
+            "\n  " ++ (show $ _money t)
 
 parseTransaction :: CSVRow -> Either String Transaction
 parseTransaction [date, from, to, title, amount, curr] =
@@ -24,7 +31,7 @@ parseTransactions :: [CSVRow] -> Either String [Transaction]
 parseTransactions csv = traverse parseTransaction csv
 
 dumpTransaction :: Transaction -> String
-dumpTransaction t = joinString "," [date, from, to, amount, curr]
+dumpTransaction t = joinString "," [date, from, to, (_title t), amount, curr]
   where
     date   = show $ _date t
     from   = show $ _from t
@@ -45,3 +52,34 @@ amount = Lens' (\t -> (_amount . _money) t) (\t newVal -> t {_money = Money { _a
 
 currency :: Lens' Transaction String
 currency = Lens' (\t -> (_currency . _money) t) (\t newVal -> t {_money = Money { _amount =  (_amount . _money) t, _currency = newVal}})
+
+data Statistics = Statistics {
+  _incomes :: Float,
+  _expenses :: Float,
+  _diff :: Float,
+  _fromDate :: Day,
+  _toDate :: Day
+} | EmptyStat
+
+compareStatistics :: Statistics -> Transaction -> Statistics
+compareStatistics EmptyStat t =
+  let
+    incomes   = max (get amount t) 0
+    expenses  = min (get amount t) 0
+    diff      = incomes - expenses
+    fromDate  = _date t
+    toDate    = _date t
+  in Statistics incomes expenses diff fromDate toDate
+
+compareStatistics stat t =
+  let
+    incomes   = (_incomes stat) + max (get amount t) 0
+    expenses  = (_expenses stat) - min (get amount t) 0
+    diff      = (_diff stat) + (get amount t)
+    fromDate  = min (_fromDate stat) (_date t)
+    toDate    = max (_toDate stat) (_date t)
+  in Statistics incomes expenses diff fromDate toDate
+
+createStats :: [Transaction] -> Statistics
+createStats transactions = foldl' compareStatistics EmptyStat transactions
+

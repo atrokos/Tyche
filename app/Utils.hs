@@ -3,6 +3,7 @@ import Data.Foldable (Foldable(foldl'))
 import Text.Read (readEither)
 import Data.Time (Day)
 import Data.Time.Format ( defaultTimeLocale, parseTimeM )
+import System.IO (appendFile)
 
 joinString :: String -> [String] -> String
 joinString _ [] = ""
