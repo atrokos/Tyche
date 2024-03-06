@@ -41,7 +41,7 @@ handleArgs :: String -> [String] -> IO ()
 handleArgs filename (command:args) = do
   case M.lookup command commands of
     Just func -> func args filename
-    Nothing   -> putStrLn $ "Uknown command: " ++ command
+    Nothing   -> putStrLn ("Uknown command: " ++ command) >> printArgs
 
 main = do
   contents <- readFile' "config.ini"

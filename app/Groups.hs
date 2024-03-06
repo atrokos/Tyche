@@ -4,7 +4,7 @@ import Data.List.Split (splitOn)
 import Control.Monad (foldM)
 
 data Group = Groups {name :: String, subgroup :: Group} | Group {name :: String}
-
+    deriving (Eq, Ord)
 instance Show Group where
     show :: Group -> String
     show (Group name) = name

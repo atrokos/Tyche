@@ -5,30 +5,19 @@ import Utils (joinString)
 import Filters
 import Data.List
 import CSVParser
-import Data.Either
+import qualified Data.Set as Set
 
-printArgs :: [(String, String)] -> IO ()
-printArgs args = do
-    let maxL = foldl (\ curr tuple -> max ((length . fst) tuple) curr ) 1 args
-    let formattedArgs = formatArgHelp args maxL
-    either putStrLn (mapM_ putStrLn) formattedArgs
+header :: String
+header = "date,from,to,title,amount,ISO\n"
 
-formatArgHelp :: [(String, String)] -> Int -> Either String [String]
-formatArgHelp argHelp numOfSpaces =
-    let
-        spaces :: String -> Either String String
-        spaces a = if numOfSpaces < 0 then Left "Number of spaces cannot be negative!" else Right $ replicate (numOfSpaces - length a + 2) ' '
-        format :: (String, String) -> Either String String
-        format (comm, help) = do
-            offset <- spaces comm
-            return $ comm ++ offset ++ help
-    in traverse format argHelp
-
-fullArgHelp :: [(String, String)]
-fullArgHelp = [
-    ("add [-n [date] <name> <from> <to> <amount> <currency>]", "Adds a new transaction in interactive mode. -n for non-interactive mode."),
-    ("removeAll [-n [date] <name>]", "Remove all transactions satisfying the name/date.")
-    ]
+printArgs :: IO ()
+printArgs =
+    putStrLn $ "\nHere are all known commands:\n" ++
+    "add [date] [name] [from] [to] [amount] [currency]  Adds a new transaction to the file in config.ini.\n" ++
+    "remove [filters]                                   Remove all transactions satisfying the filters from the file in config.ini.\n" ++
+    "filter [filters]                                   Shows all transactions satisfying the given filters.\n" ++
+    "stats  [filters]                                   Shows general statistics regarding the transactions that satisfy the given filters."
+    
 
 addCommand :: [String] -> String -> IO ()
 addCommand transaction filename =
@@ -44,14 +33,22 @@ getFilteredTransactions filterArgs csvContents = do
     filters <- parseFilterArgs (joinString " " filterArgs)
     transactions <- parseCSV csvContents >>= validateCSV >>= parseTransactions
     return $ filterTransactions transactions filters
-    
+
+getDiffTransactions :: [String] -> String -> Either String [Transaction]
+getDiffTransactions filterArgs csvContents = do
+    transactions <- parseCSV csvContents >>= validateCSV >>= parseTransactions
+    let allTrns = Set.fromList transactions
+    toBeRemoved <- getFilteredTransactions filterArgs csvContents
+    let tbrSet = Set.fromList toBeRemoved
+    return $ Set.toList $ Set.difference allTrns tbrSet
+
+-- TODO: If filters are empty, ask if the user wants to delete all
 removeCommand :: [String] -> String -> IO ()
 removeCommand filterArgs filename = do
-    print filterArgs
     csvContents <- readFile filename
-    case getFilteredTransactions filterArgs csvContents of
+    case getDiffTransactions filterArgs csvContents of
         Left msg   -> putStrLn msg
-        Right trns -> writeFile filename $ joinString "\n" $ dumpTransaction <$> trns
+        Right trns -> writeFile filename $ header ++ (joinString "\n" $ dumpTransaction <$> trns)
 
 showStats :: [Transaction] -> String -> String
 showStats transactions filename =

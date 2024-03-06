@@ -6,7 +6,9 @@ import Utils ( joinString, maybeToEither, stringToFloat, parseDate )
 import Data.List
 
 data Transaction = Transaction {_date::Day, _from::Group, _to::Group, _title :: String, _money::Money} | Empty
+  deriving (Eq, Ord)
 data Money = Money {_amount::Float, _currency::String}
+  deriving (Eq, Ord)
 
 instance Show Money where
   show (Money amount curr) = show amount ++ " " ++ curr

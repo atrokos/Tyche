@@ -30,7 +30,7 @@ createCompare c _ = Left $ "Unknown comparator: " ++ c
 createFilter :: [String] -> Either String (Filter Transaction)
 createFilter [typ, val] = parseFilter typ "==" val
 createFilter [typ, comp, val] = parseFilter typ comp val
-createFilter arg = Left $ "Unknown argument: " ++ joinString " " arg
+createFilter arg = Left $ "Unknown argument: " ++ show arg
 
 parseFilter :: String -> String -> String -> Either String (Filter Transaction)
 parseFilter typ comp val = case typ of
@@ -53,14 +53,21 @@ parseFilters list = traverse createFilter list
 filterTransactions :: [Transaction] -> [Filter Transaction] -> [Transaction]
 filterTransactions trns filters = filter (all' filters) trns
 
-safeTail :: [a] -> [a]
-safeTail [] = []
-safeTail (x:xs) = xs
-
 parseFilterArgs :: String -> Either String [Filter Transaction]
-parseFilterArgs string = parseFilters splitArguments 
-  where
-    splitArguments = safeTail $ words <$> splitOn "--" string
+parseFilterArgs string = traverse splitWords (splitOn "--" string) >>= \(_:rest) -> parseFilters rest
 
--- TODO if last element in ^^ ends on ", go back until an element starts with ".
--- If no such element is found, fail
+splitWords :: String -> Either String [String]
+splitWords "" = Right []
+splitWords str = do
+    let spanned = span (/= '"') str
+    if (not . null . snd) spanned then
+        stripQuotations (snd spanned) >>= \noQuote -> return $ (words . fst) spanned ++ [noQuote]
+    else
+        return $ (words . fst) spanned
+
+safeLast :: String -> Char
+safeLast "" = '\0'
+safeLast rest = last rest
+
+stripQuotations :: String -> Either String String
+stripQuotations ('"':rest) = if safeLast rest == '"' then Right $ init rest else Left "Non-terminated string!"
