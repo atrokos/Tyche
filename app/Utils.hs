@@ -1,7 +1,7 @@
 module Utils where
 import Data.Foldable (Foldable(foldl'))
 import Text.Read (readEither)
-import Data.Time (Day)
+import Data.Time (Day, getCurrentTime, utctDay)
 import Data.Time.Format ( defaultTimeLocale, parseTimeM )
 import System.IO (appendFile)
 

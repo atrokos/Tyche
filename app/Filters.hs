@@ -30,7 +30,7 @@ createCompare c _ = Left $ "Unknown comparator: " ++ c
 createFilter :: [String] -> Either String (Filter Transaction)
 createFilter [typ, val] = parseFilter typ "==" val
 createFilter [typ, comp, val] = parseFilter typ comp val
-createFilter arg = Left $ "Unknown argument: " ++ show arg
+createFilter arg = Left $ "Unknown argument: " ++ joinString " " arg
 
 parseFilter :: String -> String -> String -> Either String (Filter Transaction)
 parseFilter typ comp val = case typ of
@@ -43,8 +43,12 @@ parseFilter typ comp val = case typ of
                 filter      <- createCompare comp parsedValue
                 return $ contramap _date filter
   "title"  -> createCompare comp val >>= \filter -> return $ contramap _title filter
-  "from"   -> return $ contramap _from (Filter (`contains` val))
-  "to"     -> return $ contramap _to (Filter (`contains` val))
+  "from"   -> do
+                parsedGroup <- parseGroup val
+                return $ contramap _from (Filter (parsedGroup `containsG`))
+  "to"     -> do
+                parsedGroup <- parseGroup val
+                return $ contramap _to (Filter (parsedGroup `containsG`))
   wrong    -> Left $ "Unknown filter property: " ++ wrong
 
 parseFilters :: [[String]] -> Either String [Filter Transaction]
@@ -64,6 +68,8 @@ splitWords str = do
         stripQuotations (snd spanned) >>= \noQuote -> return $ (words . fst) spanned ++ [noQuote]
     else
         return $ (words . fst) spanned
+
+
 
 safeLast :: String -> Char
 safeLast "" = '\0'

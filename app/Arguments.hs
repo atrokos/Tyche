@@ -10,14 +10,23 @@ import qualified Data.Set as Set
 header :: String
 header = "date,from,to,title,amount,ISO\n"
 
-printArgs :: IO ()
-printArgs =
-    putStrLn $ "\nHere are all known commands:\n" ++
-    "add [date] [name] [from] [to] [amount] [currency]  Adds a new transaction to the file in config.ini.\n" ++
-    "remove [filters]                                   Remove all transactions satisfying the filters from the file in config.ini.\n" ++
+printArgsHelp :: IO ()
+printArgsHelp =
+    putStrLn $
+    "Here are all known commands:\n" ++
+    "add [date] [name] [from] [to] [amount] [currency]  Adds a new transaction to the file defined in config.ini.\n" ++
+    "remove [filters]                                   Remove all transactions satisfying the filters from the file defined in config.ini.\n" ++
     "filter [filters]                                   Shows all transactions satisfying the given filters.\n" ++
     "stats  [filters]                                   Shows general statistics regarding the transactions that satisfy the given filters."
     
+printFiltersHelp :: IO ()
+printFiltersHelp =
+    putStrLn $
+    "Filters follow this syntax:\n" ++
+    "--[property] {>, >=, <, <=, ==} [value]\n\n" ++
+    "Example: \"--amount > 50\" will filter all transactions that have their amount greater than 50.\n\n" ++
+    "The \"==\" sign is implicit; you can leave it out:\n" ++
+    "Example: \"--title Gas money\" will filter transactions with that title."
 
 addCommand :: [String] -> String -> IO ()
 addCommand transaction filename =

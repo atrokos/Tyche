@@ -5,6 +5,7 @@ import Control.Monad (foldM)
 
 data Group = Groups {name :: String, subgroup :: Group} | Group {name :: String}
     deriving (Eq, Ord)
+
 instance Show Group where
     show :: Group -> String
     show (Group name) = name
@@ -37,7 +38,12 @@ length (Groups _ subgroup) = lengthH subgroup 1
     where
         lengthH (Group _) acc = acc + 1
         lengthH (Groups _ sub) acc = lengthH sub (acc + 1)
-
-contains :: Group -> String -> Bool
-contains (Group name) groupName = groupName == name
-contains (Groups name subgroup) groupName = if groupName == name then True else contains subgroup groupName
+        
+-- LGroup has the whole path equal to at least part of RGroup
+-- incomes, incomes::mainAccount => True
+-- incomes::mainAccount, incomes::otherAccount => False
+containsG :: Group -> Group -> Bool
+containsG (Group lname) (Group rname) = lname == rname
+containsG (Group lname) (Groups rname _) = lname == rname
+containsG (Groups lname lsubgroup) (Groups rname rsubgroup) = if lname == rname then containsG lsubgroup rsubgroup else False
+containsG _ _ = False

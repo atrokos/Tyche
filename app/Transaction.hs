@@ -19,7 +19,7 @@ instance Show Transaction where
             "\n  " ++ (show $ _money t)
 
 parseTransaction :: CSVRow -> Either String Transaction
-parseTransaction [date, from, to, title, amount, curr] =
+parseTransaction [date, title, from, to, amount, curr] =
   do
     pDate   <- parseDate date
     pFrom   <- parseGroup from

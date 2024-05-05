@@ -1,7 +1,8 @@
-date,from,to,title,amount,ISO
-2024-01-01,work,incomes::mainAccount,Vyplata,20000.0,"CZK"
-2024-02-20,incomes::mainAccount,expenses::gifts,K narozkam,-600.0,"CZK"
-2024-02-26,incomes::mainAccount,expenses::car,Benal,-300.0,"CZK"
-2024-02-26,incomes::mainAccount,expenses::car,Gas,-500.0,"CZK"
-2024-05-03,incomes::main,expenses::drinks,Coffee & Tonic,-80.0,"CZK"
-2024-05-03,incomes::main,expenses::food,KFC,-115.0,"CZK"
+date,title,from,to,amount,ISO
+2024-01-01,Vyplata,work,incomes::mainAccount,20000.0,"CZK"
+2024-02-20,K narozkam,incomes::mainAccount,expenses::gifts,-600.0,"CZK"
+2024-02-26,Benal,incomes::mainAccount,expenses::car,-300.0,"CZK"
+2024-02-26,Gas,incomes::mainAccount,expenses::car,-500.0,"CZK"
+2024-05-03,Coffee & Tonic,incomes::otherAccount,expenses::drinks,-80.0,"CZK"
+2024-05-03,KFC,incomes::otherAccount,expenses::food,-115.0,"CZK"
+2024-05-05,Pivo Hubertus,incomes::mainAccount,expenses::drinks,24.9,"CZK"
