@@ -2,9 +2,10 @@
 module Filters where
 import Data.Time (Day)
 import Transaction
+    ( amount, Lens'(get), Transaction(_title, _date, _from, _to) )
 import Data.Functor.Contravariant (Contravariant (contramap))
-import Groups
-import Utils
+import Groups ( containsG, parseGroup )
+import Utils ( joinString, stringToFloat, parseDate )
 import Data.List.Split (wordsBy)
 import qualified Data.Char as Char
 import Data.List.Split.Internals ( splitOn )

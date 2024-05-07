@@ -8,8 +8,14 @@ import ConfigParser ( parseConfigFile )
 import qualified Data.Map as M
 import Transaction (parseTransactions, Transaction)
 import Data.Maybe ( fromMaybe )
-import System.Environment
+import System.Environment ( getArgs )
 import Arguments
+    ( addCommand,
+      filterCommand,
+      printArgsHelp,
+      printFiltersHelp,
+      removeCommand,
+      statsCommand )
 import Session (initAll, initConfig)
 
 {-
