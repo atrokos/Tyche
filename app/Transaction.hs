@@ -5,9 +5,25 @@ import CSVParser (CSVRow, ParsedCSV)
 import Utils ( joinString, maybeToEither, stringToFloat, parseDate )
 import Data.List
 
-data Transaction = Transaction {_date::Day, _from::Group, _to::Group, _title :: String, _money::Money} | Empty
+
+-- |Represents a single monetary transaction.
+data Transaction =
+  Transaction {
+    _date::Day,       -- ^The day the Transaction was performed.
+    _from::Group,     -- ^Group from which the money was taken. 
+    _to::Group,       -- ^Group to which the money was put.
+    _title :: String, -- ^Title of the Transaction.
+    _money::Money     -- ^Monetary info of the Transaction.
+    } 
+    | Empty
   deriving (Eq, Ord)
-data Money = Money {_amount::Float, _currency::String}
+
+-- |Groups currency and its value together.
+data Money =
+  Money {
+    _amount::Float,   -- ^Monetary amount.
+    _currency::String -- ^ISO code of the currency.
+    }
   deriving (Eq, Ord)
 
 instance Show Money where
@@ -18,6 +34,8 @@ instance Show Transaction where
             "  " ++ (show $ _from t) ++ " -> " ++ (show $ _to t) ++
             "\n  " ++ (show $ _money t)
 
+-- |Parses a CSVRow to a `Transaction`.
+-- Returns: Right when parsing succeeds, Left when an error occurs.
 parseTransaction :: CSVRow -> Either String Transaction
 parseTransaction [date, title, from, to, amount, curr] =
   do
@@ -26,12 +44,13 @@ parseTransaction [date, title, from, to, amount, curr] =
     pTo     <- parseGroup to
     pAmount <- stringToFloat amount
     return $ Transaction pDate pFrom pTo title (Money pAmount curr)
-
 parseTransaction row = Left $ "This line is in incorrect format:\n" ++ (joinString "," row)
 
+-- |Parses CSV to a list of `Transaction`s.
 parseTransactions :: [CSVRow] -> Either String [Transaction]
 parseTransactions csv = traverse parseTransaction csv
 
+-- |Converts a `Transaction` to its CSV equivalent.
 dumpTransaction :: Transaction -> String
 dumpTransaction t = joinString "," [date, from, to, (_title t), amount, curr]
   where
@@ -41,6 +60,13 @@ dumpTransaction t = joinString "," [date, from, to, (_title t), amount, curr]
     amount = show $ (_amount . _money) t
     curr   = show $ (_currency . _money) t
 
+{-|
+  Writes the list of `Transaction`s to the given file.
+  
+  Params:
+  - `String` : path to the file
+  - `[Transaction]` : list of `Transaction`s
+-}
 writeTransactions :: String -> [Transaction] -> IO ()
 writeTransactions filename transactions = writeFile filename csv
   where csv = foldl1 (\l r -> l ++ "\n" ++ r) $ dumpTransaction <$> transactions
