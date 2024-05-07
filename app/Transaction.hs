@@ -52,13 +52,13 @@ parseTransactions csv = traverse parseTransaction csv
 
 -- |Converts a `Transaction` to its CSV equivalent.
 dumpTransaction :: Transaction -> String
-dumpTransaction t = joinString "," [date, from, to, (_title t), amount, curr]
+dumpTransaction t = joinString "," [date, (_title t), from, to, amount, curr]
   where
     date   = show $ _date t
     from   = show $ _from t
     to     = show $ _to t
     amount = show $ (_amount . _money) t
-    curr   = show $ (_currency . _money) t
+    curr   = (_currency . _money) t
 
 {-|
   Writes the list of `Transaction`s to the given file.
@@ -110,8 +110,8 @@ updateStatistics EmptyStat t =
 updateStatistics stat t =
   let
     incomes   = (_incomes stat) + max (get amount t) 0
-    expenses  = (_expenses stat) - min (get amount t) 0
-    diff      = (_diff stat) + (get amount t)
+    expenses  = (_expenses stat) + min (get amount t) 0
+    diff      = incomes - expenses
     fromDate  = min (_fromDate stat) (_date t)
     toDate    = max (_toDate stat) (_date t)
   in Statistics incomes expenses diff fromDate toDate

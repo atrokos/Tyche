@@ -1,1 +1,4 @@
-date,from,to,title,amount,ISO
+date,title,from,to,amount,ISO
+2024-05-07,An example,main::incomes,expenses::examples,-256.0,CZK
+2024-05-07,An example,main::incomes::another,expenses::examples,-256.0,CZK
+2024-05-07,An example,main::incomes::another,expenses::examples,-256.0,CZK

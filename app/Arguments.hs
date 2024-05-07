@@ -13,6 +13,7 @@ import Data.List ()
 import CSVParser ( parseCSV, validateCSV, defaultHeader )
 import qualified Data.Set as Set
 import CSVParser (defaultHeader)
+import Session (initCSV)
 
 -- |Prints all commands and their help string to STDOUT.
 printArgsHelp :: IO ()
@@ -29,7 +30,7 @@ printFiltersHelp :: IO ()
 printFiltersHelp =
     putStrLn $
     "Filters follow this syntax:\n" ++
-    "--[property] {>, >=, <, <=, ==} [value]\n\n" ++
+    "--[property] {gt, ge, lt, le, eq} [value]\n\n" ++
     "Example: \"--amount > 50\" will filter all transactions that have their amount greater than 50.\n\n" ++
     "The \"==\" sign is implicit; you can leave it out:\n" ++
     "Example: \"--title Gas money\" will filter transactions with that title."
@@ -39,7 +40,7 @@ printFiltersHelp =
 addCommand :: [String] -> String -> IO ()
 addCommand transaction filename =
     case parseTransaction transaction of
-        Left msg    -> print msg
+        Left msg    -> putStrLn msg
         Right pTran -> do
             putStrLn $ "Added this transaction to " ++ filename
             print pTran
@@ -49,10 +50,7 @@ addCommand transaction filename =
 getFilteredTransactions :: [String] -> String -> Either String [Transaction]
 getFilteredTransactions filterArgs csvContents = do
     filters <- parseFilterArgs (joinString " " filterArgs)
-    if length filters == 0 then
-        Left "No filters given. If you want to remove all transactions, the command is `remove --ALL TRNS`."
-    else
-        parseCSV csvContents >>= validateCSV >>= parseTransactions >>= \transactions -> return $ filterTransactions transactions filters
+    parseCSV csvContents >>= validateCSV >>= parseTransactions >>= \transactions -> return $ filterTransactions transactions filters
 
 -- |Removes all `Transaction`s satisftying all given filters.
 removeTransactions :: [String] -> String -> Either String [Transaction]
@@ -69,7 +67,22 @@ removeCommand filterArgs filename = do
     csvContents <- readFile filename
     case removeTransactions filterArgs csvContents of
         Left msg   -> putStrLn msg
-        Right trns -> writeFile filename $ (joinString "\n" $ defaultHeader : (dumpTransaction <$> trns))
+        Right trns ->
+            if length trns == 0 then do
+                option <- removeAllCheck
+                if option then initCSV filename else return ()
+            else writeFile filename $ (joinString "\n" $ defaultHeader : (dumpTransaction <$> trns))
+
+removeAllCheck :: IO Bool
+removeAllCheck = do
+    putStrLn "This will remove all transactions. Proceed? [y/n]"
+    option <- getLine
+    case option of
+        "y" -> return True
+        "n" -> return False
+        _ -> do
+            putStrLn "Unknown option."
+            removeAllCheck
 
 -- |Shows statistics from the given list of `Transaction`s.
 showStats :: [Transaction] -> String -> String
