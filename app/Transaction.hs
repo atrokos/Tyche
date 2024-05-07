@@ -71,16 +71,21 @@ writeTransactions :: String -> [Transaction] -> IO ()
 writeTransactions filename transactions = writeFile filename csv
   where csv = foldl1 (\l r -> l ++ "\n" ++ r) $ dumpTransaction <$> transactions
 
--- The most basic implementation of Lenses - I only need a getter and a setter for the nested Money,
--- rest can be used with the implemented record functions
+-- |The most basic implementation of Lenses - we only need a getter and a setter for the nested Money.
+-- The rest can be used with the implemented record functions.
 data Lens' a b = Lens' {get :: (a -> b), set :: (a -> b -> a)}
 
+-- |Gets or sets the value for the `Transactions`' money amount.
 amount :: Lens' Transaction Float
 amount = Lens' (\t -> (_amount . _money) t) (\t newVal -> t {_money = Money { _amount = newVal, _currency = (_currency . _money) t}})
 
+-- |Gets or sets the ISO code for the `Transactions`' currency.
 currency :: Lens' Transaction String
 currency = Lens' (\t -> (_currency . _money) t) (\t newVal -> t {_money = Money { _amount =  (_amount . _money) t, _currency = newVal}})
 
+{-|
+  Represents basic statistics of `Transaction`s.
+-}
 data Statistics = Statistics {
   _incomes :: Float,
   _expenses :: Float,
@@ -89,8 +94,11 @@ data Statistics = Statistics {
   _toDate :: Day
 } | EmptyStat
 
-compareStatistics :: Statistics -> Transaction -> Statistics
-compareStatistics EmptyStat t =
+{-|
+  Updates the statistics according to the given `Transaction`.
+-}
+updateStatistics :: Statistics -> Transaction -> Statistics
+updateStatistics EmptyStat t =
   let
     incomes   = max (get amount t) 0
     expenses  = min (get amount t) 0
@@ -99,7 +107,7 @@ compareStatistics EmptyStat t =
     toDate    = _date t
   in Statistics incomes expenses diff fromDate toDate
 
-compareStatistics stat t =
+updateStatistics stat t =
   let
     incomes   = (_incomes stat) + max (get amount t) 0
     expenses  = (_expenses stat) - min (get amount t) 0
@@ -108,6 +116,6 @@ compareStatistics stat t =
     toDate    = max (_toDate stat) (_date t)
   in Statistics incomes expenses diff fromDate toDate
 
+-- |Creates a statistic from the given list of `Transaction`s.
 createStats :: [Transaction] -> Statistics
-createStats transactions = foldl' compareStatistics EmptyStat transactions
-
+createStats transactions = foldl' updateStatistics EmptyStat transactions

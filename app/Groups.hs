@@ -3,7 +3,15 @@ module Groups where
 import Data.List.Split (splitOn)
 import Control.Monad (foldM)
 
-data Group = Groups {name :: String, subgroup :: Group} | Group {name :: String}
+-- |Represent a user defined group.
+data Group =
+    Groups {
+        name :: String,   -- ^Name of the current head group.
+        subgroup :: Group -- ^Its subgroup.
+        }
+    | Group {
+        name :: String    -- ^Name of the terminal group.
+        }
     deriving (Eq, Ord)
 
 instance Show Group where
@@ -11,9 +19,12 @@ instance Show Group where
     show (Group name) = name
     show (Groups name subgroup) = name ++ "::" ++ show subgroup
 
+-- |Parses `Group` from the given `String`.
 parseGroup :: String -> Either String Group
 parseGroup = stringToGroup . splitOn "::"
 
+-- |Parses `Group` from the given list of `Strings`.
+-- `Group`s are concatenated from left to right.
 stringToGroup :: [String] -> Either String Group
 stringToGroup [] = Left "Empty group given!"
 stringToGroup [group] = validateGroupName group >>= \name -> return $ Group name
@@ -23,23 +34,19 @@ stringToGroup (group:subgroups) =
         subgroup <- stringToGroup subgroups
         return $ Groups name subgroup
 
+-- |List of disallowed `Group` name characters.
 disallowedNameChars :: [Char]
-disallowedNameChars = [':', '$', '%', '@'] -- klidne zmenit
+disallowedNameChars = [':', '$', '%', '@']
 
+-- |Validates that the given `String` does not contain illegal characters.
 validateGroupName :: String -> Either String String
 validateGroupName name = foldM checkPresence name disallowedNameChars
-
-checkPresence :: String -> Char -> Either String String
-checkPresence string char = if char `elem` string then Left $ char:" is not allowed as a group name!" else Right string
-
-length :: Group -> Integer
-length (Group _) = 1
-length (Groups _ subgroup) = lengthH subgroup 1
-    where
-        lengthH (Group _) acc = acc + 1
-        lengthH (Groups _ sub) acc = lengthH sub (acc + 1)
+    where checkPresence string char = if char `elem` string then
+                                        Left $ char:" is not allowed as a group name!"
+                                      else
+                                        Right string
         
--- LGroup has the whole path equal to at least part of RGroup
+-- |LGroup has the whole path equal to at least part of RGroup
 -- incomes, incomes::mainAccount => True
 -- incomes::mainAccount, incomes::otherAccount => False
 containsG :: Group -> Group -> Bool

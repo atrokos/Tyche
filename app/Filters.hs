@@ -15,10 +15,12 @@ instance Contravariant Filter where
   contramap :: (a' -> a) -> Filter a -> Filter a'
   contramap g (Filter f) = Filter (f . g)
 
+-- |Checks whether the given value satisfies all `Filter`s.
 all' :: [Filter a] -> a -> Bool
 all' [] _ = True
 all' ((Filter f):fs) x = if f x then all' fs x else False
 
+-- |Creates a comparison function according to the given `String`. 
 createCompare :: Ord a => String -> a -> Either String (Filter a)
 createCompare "==" val = Right $ Filter (== val)
 createCompare ">" val = Right $ Filter (> val)
@@ -27,11 +29,13 @@ createCompare ">=" val = Right $ Filter (>= val)
 createCompare "<=" val = Right $ Filter (<= val)
 createCompare c _ = Left $ "Unknown comparator: " ++ c
 
+-- |Creates a `Filter` from the given `String`.
 createFilter :: [String] -> Either String (Filter Transaction)
 createFilter [typ, val] = parseFilter typ "==" val
 createFilter [typ, comp, val] = parseFilter typ comp val
 createFilter arg = Left $ "Unknown argument: " ++ joinString " " arg
 
+-- |Parses the given `String`s parts to the actual `Filter`.
 parseFilter :: String -> String -> String -> Either String (Filter Transaction)
 parseFilter typ comp val = case typ of
   "amount" -> do
@@ -49,11 +53,14 @@ parseFilter typ comp val = case typ of
   "to"     -> do
                 parsedGroup <- parseGroup val
                 return $ contramap _to (Filter (parsedGroup `containsG`))
+  "ALL"    -> return $ contramap _title (Filter (/= "\0")) -- A small trick; I assume that no user can input the NULL character, so all transactions cannot equal this.
   wrong    -> Left $ "Unknown filter property: " ++ wrong
 
+-- |Creates `Filter`s from the given list of lists of `String`s.
 parseFilters :: [[String]] -> Either String [Filter Transaction]
 parseFilters list = traverse createFilter list
 
+-- |Returns a list of `Transaction`s that satisfy all given `Filter`s.
 filterTransactions :: [Transaction] -> [Filter Transaction] -> [Transaction]
 filterTransactions trns filters = filter (all' filters) trns
 
@@ -69,11 +76,11 @@ splitWords str = do
     else
         return $ (words . fst) spanned
 
-
-
+-- |A `String` variant of last that is total.
 safeLast :: String -> Char
 safeLast "" = '\0'
 safeLast rest = last rest
 
+-- |Removes quoation marks from both ends of the `String`.
 stripQuotations :: String -> Either String String
 stripQuotations ('"':rest) = if safeLast rest == '"' then Right $ init rest else Left "Non-terminated string!"

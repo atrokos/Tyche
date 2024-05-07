@@ -6,10 +6,9 @@ import Filters
 import Data.List
 import CSVParser
 import qualified Data.Set as Set
+import CSVParser (defaultHeader)
 
-header :: String
-header = "date,from,to,title,amount,ISO\n"
-
+-- |Prints all commands and their help string to STDOUT.
 printArgsHelp :: IO ()
 printArgsHelp =
     putStrLn $
@@ -19,6 +18,7 @@ printArgsHelp =
     "filter [filters]                                   Shows all transactions satisfying the given filters.\n" ++
     "stats  [filters]                                   Shows general statistics regarding the transactions that satisfy the given filters."
     
+-- |Prints help about `Filter`s to STDOUT.
 printFiltersHelp :: IO ()
 printFiltersHelp =
     putStrLn $
@@ -28,6 +28,8 @@ printFiltersHelp =
     "The \"==\" sign is implicit; you can leave it out:\n" ++
     "Example: \"--title Gas money\" will filter transactions with that title."
 
+-- |Main command that parses the given list of `String`s, converts them to a `Transaction` and
+-- appends it to the configured CSV file.
 addCommand :: [String] -> String -> IO ()
 addCommand transaction filename =
     case parseTransaction transaction of
@@ -37,28 +39,33 @@ addCommand transaction filename =
             print pTran
             appendFile filename ("\n" ++ dumpTransaction pTran)
 
+-- |Parses the `Filter` arguments and returns all `Transaction`s satisfying all the `Filter`s.
 getFilteredTransactions :: [String] -> String -> Either String [Transaction]
 getFilteredTransactions filterArgs csvContents = do
     filters <- parseFilterArgs (joinString " " filterArgs)
-    transactions <- parseCSV csvContents >>= validateCSV >>= parseTransactions
-    return $ filterTransactions transactions filters
+    if length filters == 0 then
+        Left "No filters given. If you want to remove all transactions, the command is `remove --ALL TRNS`."
+    else
+        parseCSV csvContents >>= validateCSV >>= parseTransactions >>= \transactions -> return $ filterTransactions transactions filters
 
-getDiffTransactions :: [String] -> String -> Either String [Transaction]
-getDiffTransactions filterArgs csvContents = do
+-- |Removes all `Transaction`s satisftying all given filters.
+removeTransactions :: [String] -> String -> Either String [Transaction]
+removeTransactions filterArgs csvContents = do
     transactions <- parseCSV csvContents >>= validateCSV >>= parseTransactions
     let allTrns = Set.fromList transactions
     toBeRemoved <- getFilteredTransactions filterArgs csvContents
     let tbrSet = Set.fromList toBeRemoved
     return $ Set.toList $ Set.difference allTrns tbrSet
 
--- TODO: If filters are empty, ask if the user wants to delete all
+-- |Main command for removing `Transaction`s.
 removeCommand :: [String] -> String -> IO ()
 removeCommand filterArgs filename = do
     csvContents <- readFile filename
-    case getDiffTransactions filterArgs csvContents of
+    case removeTransactions filterArgs csvContents of
         Left msg   -> putStrLn msg
-        Right trns -> writeFile filename $ header ++ (joinString "\n" $ dumpTransaction <$> trns)
+        Right trns -> writeFile filename $ (joinString "\n" $ defaultHeader : (dumpTransaction <$> trns))
 
+-- |Shows statistics from the given list of `Transaction`s.
 showStats :: [Transaction] -> String -> String
 showStats transactions filename =
     "Showing statistics for "++ filename ++ ",\n" ++
@@ -70,21 +77,32 @@ showStats transactions filename =
     where
         stat = createStats transactions
 
+-- |Filters `Transaction`s before showing them.
 handleStats :: [String] -> String -> String -> Either String String
 handleStats filterArgs csvContents filename = do
     filtered <- getFilteredTransactions filterArgs csvContents
     return $ showStats filtered filename
 
+-- |Main command for running `Transaction` statistics.
 statsCommand :: [String] -> String -> IO ()
 statsCommand filterArgs filename = do
     csvContents <- readFile filename
     either putStrLn putStrLn $ handleStats filterArgs csvContents filename
 
+-- |Main command for filtering `Transaction`s.
 filterCommand :: [String] -> String -> IO ()
 filterCommand filterArgs filename = do
     csvContents <- readFile filename
     case getFilteredTransactions filterArgs csvContents of
         Left msg   -> putStrLn msg
-        Right trns -> do
-            putStrLn $ "Showing all relevant transactions from " ++ filename
-            putStrLn $ joinString "\n\n" $ show <$> trns
+        Right trns ->
+            if length trns == 0 then
+                putStrLn "No transactions satisfying the given filters were found."
+            else 
+                listTransactions trns filename
+
+-- |Lists all found `Transaction`s (if any).
+listTransactions :: [Transaction] -> String -> IO ()
+listTransactions trns filename = do
+    putStrLn $ "Showing " ++ (show $ length trns) ++ " relevant transaction(s) from " ++ filename
+    putStrLn $ joinString "\n\n" $ show <$> trns

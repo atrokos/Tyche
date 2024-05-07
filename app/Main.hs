@@ -23,6 +23,7 @@ WORKFLOW
       filter ->  Load transactions (IO) -> Parse filters (Either) -> filterTransactions (Either) -> showTransactions (IO)
 -}
 
+-- |Checks the config file for the CSV file path.
 init :: String -> Either String String
 init contents = do
   config <- parseConfigFile contents
@@ -30,6 +31,7 @@ init contents = do
     Nothing     -> Left "Filepath not found in config!"
     (Just path) -> Right path
   
+-- |Returns a Map of Command -> Command function
 commands :: M.Map String ([String] -> String -> IO ())
 commands = M.fromList [
           ("add", addCommand),
@@ -42,12 +44,14 @@ commands = M.fromList [
           ("switch", \_ _ -> putStrLn "The switch command only takes one argument (session name)."),
           ("session", \_ session -> putStrLn $ "The current session is " ++ session)]
 
+-- |Executes the given command if it exists.
 handleArgs :: String -> [String] -> IO ()
 handleArgs filename (command:args) = do
   case M.lookup command commands of
     Just func -> func args filename
     Nothing   -> putStrLn ("Uknown command: " ++ command) >> printArgsHelp
 
+-- |Handles configuration related operations, like creating or parsing it.
 handleConfig :: [String] -> IO ()
 handleConfig ["init", filename] = initAll filename
 handleConfig ["switch", filename] = initConfig filename
@@ -58,5 +62,3 @@ handleConfig args = do
     Left err -> putStrLn err
 
 main = getArgs >>= handleConfig
-
--- main = getArgs >>= print

@@ -1,6 +1,7 @@
 module Session where
+import CSVParser (defaultHeader)
 
-
+-- |Creates the configuration file and the CSV file with the default header.
 initAll :: String -> IO ()
 initAll filename = initConfig filename >> initCSV filename
 
@@ -10,4 +11,4 @@ initConfig filename = writeFile "config.ini" $
 
 initCSV :: String -> IO ()
 initCSV filename = writeFile (filename ++ ".csv") $
-  "date,from,to,title,amount,ISO\n"
+  defaultHeader ++ "\n"

@@ -1,10 +1,15 @@
 module CSVParser where
 import Utils ( joinString ) 
 import Data.Char (isSpace)
+import Data.List.Split (splitOn)
 
 type CSVCell = String
 type CSVRow = [CSVCell]
 type ParsedCSV = Either String [CSVRow]
+
+-- |Returns the default CSV header.
+defaultHeader :: String
+defaultHeader = "date,title,from,to,amount,ISO"
 
 -- |Represents the state of CSV parsing.
 data Consumed =
@@ -14,16 +19,14 @@ data Consumed =
     }
     deriving Show
 
-{-|
-  Consumes
--}
 consumeString :: String -> String -> Either String Consumed
 consumeString "" list = Left "A string was not ended properly!"
 consumeString (curr:xs) acc
     | curr == '"' = if isEscaped xs curr then consumeString (drop 1 xs) (acc ++ "\"") else Right $ Consumed acc xs
     | otherwise   = consumeString xs (acc ++ [curr])
 
-isEscaped :: String -> Char -> Bool  -- Checks whether the next character (if any) is the one supplemented
+-- |Checks whether the next character (if any) is the one supplemented.
+isEscaped :: String -> Char -> Bool 
 isEscaped "" _ = False
 isEscaped (x:rest) char = char == x
 
@@ -42,11 +45,25 @@ parseLine xs = parseLine (rest consumedWB) >>= (\consumed -> return $ [result co
   where consumedWB = consumeCell xs
 
 parseCSV :: String -> ParsedCSV
-parseCSV input = traverse parseLine (nonEmpty . lines $ input) >>= \(header:csv) -> return $ csv
+parseCSV "" = Left "An empty CSV was found, terminating."
+parseCSV input = traverse parseLine (nonEmpty . lines $ input) >>= \csv -> return $ csv
   where nonEmpty = filter (any (not . isSpace))
 
-validateCSV :: [CSVRow] -> ParsedCSV -- Checks whether all rows have the same amount of columns
-validateCSV [] = Right []
-validateCSV [row] = Right [row]
-validateCSV all@(header:rows) = traverse (\r -> if l == length r then Right r else Left $ "Error: This row does not have the same amount of columns as the header:\n" <> (joinString "," r)) all
-    where l = length $ header
+-- |Checks that the given CSV has the default header and that all rows have the same amount of columns.
+-- Returns the same CSV, without its header when successful.
+validateCSV :: [CSVRow] -> ParsedCSV
+validateCSV [] = Left "The CSV file is missing a header!"
+validateCSV (header:rows) = do
+  let headerString = joinString "," header
+  let expectedRows = length $ splitOn "," defaultHeader
+  if defaultHeader /= headerString then
+    Left "The CSV file has an incorrect header or it is missing!"
+  else
+    validateRows expectedRows rows
+
+validateRows :: Int -> [CSVRow] -> ParsedCSV
+validateRows rowLength = traverse checkLength
+  where checkLength row = if length row /= rowLength then
+                            Left $ "Error: This row does not have the same amount of columns as the header:\n" ++ joinString "," row
+                          else
+                            Right row
