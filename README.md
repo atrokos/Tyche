@@ -4,17 +4,24 @@ A simple ledger in Haskell.
 ## Sessions
 Session is a single CSV file where all data are stored.
 To create initialize the program and create a new session, type:\
-`[path to Tyche] init [session name]`
+```powershell
+init <session name>
+```
 
 To create another session and switch to it, or switch to an existing one, type:\
-`[path to Tyche] switch [session name]`
-
+```powershell
+switch <session name>
+```
+To see current session, type
+```powershell
+session
+```
 
 ## Transactions
 ### Add transaction
 To add a new transaction, type:
 ```powershell
-[path to Tyche] add [date] [name] [from] [to] [amount] [currency]
+add <date> <name> <from> <to> <amount> <currency>
 ```
 
 Where:
@@ -40,7 +47,7 @@ Where:
 
 Example:
 ```powershell
-remove --title "An example" --from main::incomes
+remove --title eq "An example" --from eq main::incomes
 ```
 
 If some filters would remove all of your transaction, the program will ask you if you
@@ -49,7 +56,7 @@ want to proceed.
 
 ## Groups
 Groups make it possible to "tag" or denote your transactions. A group can have infinitely many
-subgroups, which are denoted by `::`. Examples:\
+subgroups, which are denoted by `::`. Examples:
 - `expenses::food`
 - `incomes::work::some_job`
 
@@ -68,12 +75,12 @@ Filters are a powerful feature that allows you to narrow down transactions based
 ### Syntax and Usage
 To apply a filter, use the following syntax pattern:
 ```powershell
-filter –-[property] {gt, ge, lt, le, eq} [value]
+filter –-<property> {gt, ge, lt, le, eq} <value>
 ```
 Where:
-- `--[property]` is the transaction property you want to filter by (e.g., `--amount`, `--date`, `--title`).
+- `--<property>` is the transaction property you want to filter by (e.g., `--amount`, `--date`, `--title`).
 - `{gt, ge, lt, le, eq}` are the operators representing greater than (`gt`), greater than or equal to (`ge`), less than (`lt`), less than or equal to (`le`), and equal to (`eq`).
-- `[value]` is the value you want to compare the property against.
+- `<value>` is the value you want to compare the property against.
 
 ### Examples
 #### Filtering by Amount

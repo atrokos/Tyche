@@ -102,7 +102,7 @@ updateStatistics EmptyStat t =
   let
     incomes   = max (get amount t) 0
     expenses  = min (get amount t) 0
-    diff      = incomes - expenses
+    diff      = incomes + expenses
     fromDate  = _date t
     toDate    = _date t
   in Statistics incomes expenses diff fromDate toDate
@@ -111,7 +111,7 @@ updateStatistics stat t =
   let
     incomes   = (_incomes stat) + max (get amount t) 0
     expenses  = (_expenses stat) + min (get amount t) 0
-    diff      = incomes - expenses
+    diff      = incomes + expenses
     fromDate  = min (_fromDate stat) (_date t)
     toDate    = max (_toDate stat) (_date t)
   in Statistics incomes expenses diff fromDate toDate

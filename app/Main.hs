@@ -52,6 +52,7 @@ commands = M.fromList [
 
 -- |Executes the given command if it exists.
 handleArgs :: String -> [String] -> IO ()
+handleArgs _ [] = putStrLn "No command given!" >> printArgsHelp
 handleArgs filename (command:args) = do
   case M.lookup command commands of
     Just func -> func args filename
