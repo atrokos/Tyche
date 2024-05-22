@@ -3,12 +3,12 @@ A simple ledger in Haskell.
 
 ## Sessions
 Session is a single CSV file where all data are stored.
-To create initialize the program and create a new session, type:\
+To initialize the program and create a new session, type:
 ```powershell
 init <session name>
 ```
 
-To create another session and switch to it, or switch to an existing one, type:\
+To create another session and switch to it, or switch to an existing one, type:
 ```powershell
 switch <session name>
 ```
