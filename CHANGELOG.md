@@ -1,5 +1,5 @@
-# Revision history for MoneyManager
+# Revision history for Tyche
 
-## 0.1.0.0 -- YYYY-mm-dd
+## 1.0.0 -- 2024-05-22
 
-* First version. Released on an unsuspecting world.
+* First release.
