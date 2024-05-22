@@ -4,6 +4,7 @@ import System.Directory (doesFileExist)
 
 -- |Creates the configuration file and the CSV file with the default header (if it does not exist).
 initAll :: String -> IO ()
+initAll "" = putStrLn "Session name required."
 initAll sessionName = initConfig sessionName
 
 initConfig :: String -> IO ()
@@ -18,4 +19,4 @@ initConfig sessionName = do
 
 initCSV :: String -> IO ()
 initCSV filename = writeFile filename $
-  defaultHeader ++ "\n"
+  defaultHeader
