@@ -107,5 +107,5 @@ The only difference is that the program returns all total incomes (values > 0), 
 This will compute statistics on all transactions that have their amount less than -50:
 
 ```powershell
-stats --amount lt 50
+stats --amount lt -50
 ```
